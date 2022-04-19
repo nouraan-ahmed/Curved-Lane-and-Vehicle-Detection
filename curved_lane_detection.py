@@ -36,6 +36,14 @@ def undistort_image(image):
     img_size = (image.shape[1], image.shape[0])
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size,None,None)
     return cv2.undistort(image, mtx, dist, None, mtx)
-test_image = cv2.imread(images[0])
-cv2.imwrite('./output_images/chessboard_before_distortion.jpg', test_image)
-cv2.imwrite('./output_images/chessboard_after_distortion.jpg', undistort_image(test_image))
+#test_image = cv2.imread(images[0])
+#cv2.imwrite('./output_images/chessboard_before_distortion.jpg', test_image)
+#cv2.imwrite('./output_images/chessboard_after_distortion.jpg', undistort_image(test_image))
+
+images = []
+data_path = input_video_path+'test_images/'
+out_path = output_video_path+'output_images/'
+for file in os.listdir(data_path):
+    if '.jpg' in file:
+        image = mpimg.imread(data_path + file)
+        images.append(image)
