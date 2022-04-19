@@ -74,3 +74,50 @@ def showImages(process, num=len(images), show_gray=False):
 
 
 # showImages(undistort_image)
+
+
+# Edge deection using sobel
+
+
+def abs_sobel(image, direction='x', kernel_size=3, thresh_range=(0, 255)):
+
+    # Convert to gray scale image
+    gray_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    # Apply x or y gradient then take the absolute
+    if direction == 'x':
+        sobel_x = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=kernel_size)
+        abs_sobel = np.absolute(sobel_x)
+    if direction == 'y':
+        sobel_y = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1, ksize=kernel_size)
+        abs_sobel = np.absolute(sobel_y)
+
+    # Convert to 'cv2.CV_8U'.
+    sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
+    # Take the same shape and with setting it's values to 0
+    binary_img = np.zeros_like(sobel)
+    binary_img[(sobel >= thresh_range[0]) & (sobel <= thresh_range[1])] = 1
+
+    # Black and white output image
+    return binary_img
+
+
+def calc_mag_thresh(image, kernel_size=3, thresh_range=(0, 255)):
+
+    # Convert to grayscale
+    gray_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    # Calculate Sobel x and y gradients
+    sobel_x = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=kernel_size)
+    sobel_y = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1, ksize=kernel_size)
+    # Calculate the gradient magnitude
+    mag_grad = np.sqrt(sobel_x**2 + sobel_y**2)
+    # Convert to 'cv2.CV_8U'.
+    factor = np.max(mag_grad)/255
+    mag_grad = (mag_grad/factor).astype(np.uint8)
+    # Take the same shape and with setting it's values to 0
+    binary_img = np.zeros_like(mag_grad)
+    binary_img[(mag_grad >= thresh_range[0]) &
+               (mag_grad <= thresh_range[1])] = 1
+
+    # Black and white output image
+    return binary_img
+
