@@ -212,7 +212,7 @@ def inwarp(image):
     return warped
 
 
-#land detection
+#lane detection
 
 class LaneDetector:
     
@@ -357,6 +357,50 @@ class LaneDetector:
 
             self.bestx[0] = self.bestx[0]/len(self.recent_xfitted)
             self.bestx[1] = self.bestx[1]/len(self.recent_xfitted)
+
+        else:
+            self.detected = True
+
+        # Create an image to draw on and an image to show the selection window
+        out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+
+        window_img = np.zeros_like(out_img)
+        # Color in left and right line pixels
+        out_img[nonzeroy[self.left_lane_inds],
+                nonzerox[self.left_lane_inds]] = [255, 0, 0]
+        out_img[nonzeroy[self.right_lane_inds],
+                nonzerox[self.right_lane_inds]] = [0, 0, 255]
+
+        # Generate a polygon to illustrate the search window area
+        # And recast the x and y points into usable format for cv2.fillPoly()
+        margin = 5
+        left_line_window1 = np.array(
+            [np.transpose(np.vstack([self.bestx[0]-margin, ploty]))])
+        left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([self.bestx[0]+margin,
+                                      ploty])))])
+        left_line_pts = np.hstack((left_line_window1, left_line_window2))
+
+        right_line_window1 = np.array(
+            [np.transpose(np.vstack([self.bestx[1]-margin, ploty]))])
+        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([self.bestx[1]+margin,
+                                      ploty])))])
+        right_line_pts = np.hstack((right_line_window1, right_line_window2))
+
+        center_line_window1 = np.array(
+            [np.transpose(np.vstack([self.bestx[0]+margin, ploty]))])
+        center_line_window2 = np.array(
+            [np.flipud(np.transpose(np.vstack([self.bestx[1]-margin, ploty])))])
+        center_line_pts = np.hstack((center_line_window1, center_line_window2))
+
+        # Draw the lane onto the warped blank image
+        cv2.fillPoly(window_img, np.int_([left_line_pts]), (255, 0, 0))
+        cv2.fillPoly(window_img, np.int_([right_line_pts]), (255, 0, 0))
+        cv2.fillPoly(window_img, np.int_([center_line_pts]), (0, 255, 0))
+
+        window_img_unwrapped = inwarp(window_img)
+
+        result = cv2.addWeighted(
+            orignal_image, 1, window_img_unwrapped, 0.3, 0)
             
             
             
