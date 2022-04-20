@@ -433,78 +433,46 @@ class LaneDetector:
         
         return result
 
-            
-            
-            
-#process image function
-
+                  
+# process image function
 lane_detector = LaneDetector()
 draw_lane = lane_detector.draw_lane
+
+
 def process_image(image):
     undistorted = undistort_image(image)
     filtered_binary = Image_Filter(undistorted)
     binary_warped = warp(filtered_binary)
-    binary_inwarped = inwarp(binary_warped)
-    final_image = draw_lane(image, binary_warped, filtered_binary)
-    sobel_image =combined_thresholds(image, ksize = 3)
-    img1= cv2.resize(final_image,(0, 0), None,0.5, 0.5)
-    img2 = cv2.resize(undistorted, (0, 0), None, 0.5, 0.5)
-    img3 = np.dstack((filtered_binary, filtered_binary, filtered_binary)) * 255
-    img3 = cv2.resize(img3, (0, 0), None, 0.5, 0.5)
-    img4 = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
-    img4 = cv2.resize(img4, (0, 0), None, 0.5, 0.5)
-    img5 = np.dstack((sobel_image, sobel_image, sobel_image)) * 255
-    img5 = cv2.resize(img5, (0, 0), None, 0.5, 0.5)
-    img6 = np.dstack((binary_inwarped, binary_inwarped, binary_inwarped)) * 255
-    img6 = cv2.resize(img6, (0, 0), None, 0.5, 0.5)
+    if(debug == '1'):
+        binary_inwarped = inwarp(binary_warped)
+        final_image = draw_lane(image, binary_warped, filtered_binary)
+        sobel_image = combined_thresholds(image, ksize=3)
+        img1 = cv2.resize(final_image, (0, 0), None, 0.5, 0.5)
+        img2 = cv2.resize(undistorted, (0, 0), None, 0.5, 0.5)
+        img3 = np.dstack(
+            (filtered_binary, filtered_binary, filtered_binary)) * 255
+        img3 = cv2.resize(img3, (0, 0), None, 0.5, 0.5)
+        img4 = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
+        img4 = cv2.resize(img4, (0, 0), None, 0.5, 0.5)
+        img5 = np.dstack((sobel_image, sobel_image, sobel_image)) * 255
+        img5 = cv2.resize(img5, (0, 0), None, 0.5, 0.5)
+        img6 = np.dstack(
+            (binary_inwarped, binary_inwarped, binary_inwarped)) * 255
+        img6 = cv2.resize(img6, (0, 0), None, 0.5, 0.5)
 
-    f_image1 = cv2.vconcat([img1, img2])
-    f_image2 = cv2.vconcat([img3, img4])
-    f_image3 = cv2.vconcat([img5, img6])
-    f_image = np.concatenate((f_image1, f_image2, f_image3), axis=1)
-    return f_image
+        f_image1 = cv2.vconcat([img1, img2])
+        f_image2 = cv2.vconcat([img3, img4])
+        f_image3 = cv2.vconcat([img5, img6])
+        final_image = np.concatenate((f_image1, f_image2, f_image3), axis=1)
+    else:
+        final_image = draw_lane(image, binary_warped, filtered_binary)
+    return final_image
 
 
-showImages(process_image,show_gray=True)
-
-
-# Show Image
-test_image = mpimg.imread('test_images/test1.jpg')
-final_image = process_image(test_image)
-plt.figure(figsize=(20, 20))
-plt.imshow(final_image)
-
-# output video
-lane_detector = LaneDetector()
-draw_lane = lane_detector.draw_lane
-white_output = output_video_path+file_name + '_output.mp4'
+name = '_debug_output.mp4' if debug == '1' else '_output.mp4'
+white_output = output_video_path+file_name + name
 clip1 = VideoFileClip(file_name+".mp4")
-
-if debug:
-    clip01 = clip1.fl_image(undistort_image)
-    clip02 = clip1.fl_image(combined_thresholds)
-    clip03 = clip1.fl_image(Image_Filter)
-    clip04 = clip1.fl_image(warp)
-    clip05 = clip1.fl_image(process_image)
-
-    out1 = output_video_path+"undistort.mp4"
-    out2 = output_video_path+"combined_thresholds.mp4"
-    out3 = output_video_path+"filter.mp4"
-    out4 = output_video_path+"warp.mp4"
-    out5 = output_video_path+"process.mp4"
-    white_output = output_video_path+file_name + '_output.mp4'
-
-    clip01.write_videofile(out1, audio=False)
-    clip02.write_videofile(out2, audio=False)
-    clip03.write_videofile(out3, audio=False)
-    clip04.write_videofile(out4, audio=False)
-    clip05.write_videofile(out5, audio=False)
-
-    result_clip = concatenate_videoclips(
-        [clip01, clip02, clip03, clip04, clip05])
-    result_clip.write_videofile(white_output, audio=False)
-else:
-    white_clip = clip1.fl_image(process_image)
-    white_clip.write_videofile(white_output, audio=False)
+white_clip = clip1.fl_image(process_image)
+white_clip.write_videofile(white_output, audio=False)
             
    
