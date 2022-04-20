@@ -50,6 +50,22 @@ Before Undestortion
 After Undestortion
 ![alt text][image2]
 
+### Perspective Transform from Camera Angle to Bird's Eye View
+
+To calucluate curvature, the ideal perspective is a bird's eye view. This means that the road is perceived from above, instead of at an angle through the vehicle's windshield.
+
+This perspective transform is computed using a straight lane scenario and prior common knowledge that the lane lines are in fact parallel. Source and destination points are identified directly from the image for the perspective transform.
+
+OpenCV provides perspective transform functions to calculate the transformation matrix for the images given the source and destination points. Using warpPerspective function, the bird's eye view perspective transform is performed.
+
+Before Warp Perspective
+![alt text][image9]
+
+After  Warp Perspective
+![alt text][image10]
+
+
+
 ### Pipeline (single images)
 
 #### 1. Provide an example of a distortion-corrected image.
