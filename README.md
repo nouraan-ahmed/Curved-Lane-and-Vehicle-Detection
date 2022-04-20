@@ -77,4 +77,10 @@ Before Warp Perspective
 After  Warp Perspective
 ![alt text][image10]
 
+#### Lane Line Detection Using Histogram
 
+The lane line detection is performed on binary thresholded images that have already been undistorted and warped. Initially a histogram is computed on the image. This means that the pixel values are summed on each column to detect the most probable x position of left and right lane lines.
+
+Starting with these base positions on the bottom of the image, the sliding window method is applied going upwards searching for line pixels. Lane pixels are considered when the x and y coordinates are within the area defined by the window. When enough pixels are detected to be confident they are part of a line, their average position is computed and kept as starting point for the next upward window.
+
+All these pixels are put together in a list of their x and y coordinates. This is done symmetrically on both lane lines. leftx, lefty, rightx, righty pixel positions are returned from the function and afterwards, a second-degree polynomial is fitted on each left and right side to find the best line fit of the selected pixels.
