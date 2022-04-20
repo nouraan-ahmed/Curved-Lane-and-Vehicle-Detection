@@ -50,7 +50,20 @@ Before Undestortion
 After Undestortion
 ![alt text][image2]
 
-### Perspective Transform from Camera Angle to Bird's Eye View
+
+### Pipeline (single images)
+
+#### 1. Provide an example of a distortion-corrected image.
+
+To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+
+Before 
+![alt text][image3]
+
+After
+![alt text][image4]
+
+#### 2. Perspective Transform from Camera Angle to Bird's Eye View
 
 To calucluate curvature, the ideal perspective is a bird's eye view. This means that the road is perceived from above, instead of at an angle through the vehicle's windshield.
 
@@ -65,15 +78,3 @@ After  Warp Perspective
 ![alt text][image10]
 
 
-
-### Pipeline (single images)
-
-#### 1. Provide an example of a distortion-corrected image.
-
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-
-Before 
-![alt text][image3]
-
-After
-![alt text][image4]
