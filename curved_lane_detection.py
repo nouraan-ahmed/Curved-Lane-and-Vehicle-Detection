@@ -188,7 +188,7 @@ def Image_Filter(image):
     return combined_binary
     
     
-#prespectives
+# warp and inwarp prespective
 
 def warp(image):
     src = np.float32([[570, 460], [image.shape[1] - 573, 460],
@@ -212,16 +212,83 @@ def inwarp(image):
     return warped
 
 
-#land detect
+#land detection
 
 class LaneDetector:
 
-    def __init__(self):
-    
     def draw_lane(self, orignal_image, binary_warped, filtered_binary):
-    
-    #Renad
-    #da kda mn b3d l else 
+
+        # Identify the x and y positions of all nonzero pixels in the image
+        nonzero = binary_warped.nonzero()
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+
+        # Create an output image to draw on and  visualize the result
+        out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+
+        margin = 50
+        # Set minimum number of pixels found to recenter window
+        minpix = 50
+
+        if self.detected:
+            # Take a histogram of the bottom half of the image
+            histogram = np.sum(
+                binary_warped[binary_warped.shape[0]//2:, :], axis=0)
+
+            # Find the peak of the left and right halves of the histogram
+            # These will be the starting point for the left and right lines
+            midpoint = np.int(histogram.shape[0]/2)
+            leftx_base = np.argmax(histogram[:midpoint])
+            rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+
+            nwindows = 9  # Choose the number of sliding windows
+            # Set height of windows
+            window_height = np.int((binary_warped.shape[0])/nwindows)
+
+            leftx_current = leftx_base   # Current positions to be updated for each window
+            rightx_current = rightx_base   # Set the width of the windows +/- margin
+
+            left_lane_inds = []
+            right_lane_inds = []
+
+            # Step through the windows one by one
+            for window in range(nwindows):
+
+                # Identify window boundaries in x and y (and right and left)
+                win_y_low = binary_warped.shape[0] - (window+1)*window_height
+                win_y_high = binary_warped.shape[0] - window*window_height
+                win_xleft_low = leftx_current - margin
+                win_xleft_high = leftx_current + margin
+                win_xright_low = rightx_current - margin
+                win_xright_high = rightx_current + margin
+
+                # Identify the nonzero pixels in x and y within the window
+                good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
+                                  (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
+                good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
+                                   (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
+
+                # Append these indices to the lists
+                left_lane_inds.append(good_left_inds)
+                right_lane_inds.append(good_right_inds)
+                # If you found > minpix pixels, recenter next window on their mean position
+                if len(good_left_inds) > minpix:
+                    leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
+                if len(good_right_inds) > minpix:
+                    rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+
+            # Concatenate the arrays of indices
+            self.left_lane_inds = np.concatenate(left_lane_inds)
+            self.right_lane_inds = np.concatenate(right_lane_inds)
+        else:
+            self.left_lane_inds = ((nonzerox > (self.best_fit[0][0]*(nonzeroy**2) + self.best_fit[0][1]*nonzeroy +
+                                    self.best_fit[0][2] - margin)) & (nonzerox < (self.best_fit[0][0]*(nonzeroy**2) +
+                                                                                  self.best_fit[0][1]*nonzeroy + self.best_fit[0][2] + margin)))
+            self.right_lane_inds = ((nonzerox > (self.best_fit[1][0]*(nonzeroy**2) + self.best_fit[1][1]*nonzeroy +
+                                    self.best_fit[1][2] - margin)) & (nonzerox < (self.best_fit[1][0]*(nonzeroy**2) +
+                                                                                  self.best_fit[1][1]*nonzeroy + self.best_fit[1][2] + margin)))
+  
+        
     # Again, extract left and right line pixel positions
         leftx = nonzerox[self.left_lane_inds]
         lefty = nonzeroy[self.left_lane_inds]
