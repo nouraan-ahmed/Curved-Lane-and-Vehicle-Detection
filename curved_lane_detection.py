@@ -401,6 +401,38 @@ class LaneDetector:
 
         result = cv2.addWeighted(
             orignal_image, 1, window_img_unwrapped, 0.3, 0)
+        
+        if leftx.shape[0] >= ploty.shape[0] and rightx.shape[0] >= ploty.shape[0] :
+            leftx = leftx[::-1]  # Reverse to match top-to-bottom in y
+            rightx = rightx[::-1]  # Reverse to match top-to-bottom in y
+
+            # Define conversions in x and y from pixels space to meters
+            ym_per_pix = 4.3/binary_warped.shape[0] # meters per pixel in y dimension
+            xm_per_pix = 1/binary_warped.shape[1] # meters per pixel in x dimension
+
+            self.vehicle_offset = ((binary_warped.shape[1]/2) - (((rightx[0] - leftx[0])/2) + leftx[0]))*xm_per_pix
+            
+
+            leftx = leftx[:len(ploty)]
+            rightx = rightx[:len(ploty)]
+
+            y_eval = np.max(ploty)
+            
+            # Fit new polynomials to x,y in world space
+            left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
+            right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
+            # Calculate the new radii of curvature
+            left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+            right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+            # Now our radius of curvature is in meters
+            self.avg_curverad = (left_curverad + right_curverad) / 2
+            
+        cv2.putText(result, 'Vehicle is ' + str(-self.vehicle_offset)[0:5] + 'm left of center', (30,140), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2)
+        cv2.putText(result, 'Radius of Curvature = ' + str(int(np.round(self.avg_curverad))) + '(m)', (30,80), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2)
+        
+        
+        return result
+
             
             
             
@@ -434,6 +466,8 @@ def process_image(image):
 
 
 showImages(process_image,show_gray=True)
+
+
             
             
    
