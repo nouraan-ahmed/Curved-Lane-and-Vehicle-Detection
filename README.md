@@ -63,6 +63,7 @@ Before
 After
 ![alt text][image4]
 
+
 #### 2. Perspective Transform from Camera Angle to Bird's Eye View
 
 To calucluate curvature, the ideal perspective is a bird's eye view. This means that the road is perceived from above, instead of at an angle through the vehicle's windshield.
@@ -76,6 +77,22 @@ Before Warp Perspective
 
 After  Warp Perspective
 ![alt text][image10]
+
+#### 3. Describe how you used color transforms, gradients or other methods to create a thresholded binary image. Provide an example of a binary image result.
+I used a combination of color and gradient thresholds to generate a binary image.
+Here's an example of my output for this step.
+
+Before Gradient Thresholding 
+![alt text][image5]
+
+After Gradient Thresholding
+![alt text][image6]
+
+Before Color Thresholding
+![alt text][image7]
+
+After Color Thresholding 
+![alt text][image8]
 
 #### Lane Line Detection Using Histogram
 
