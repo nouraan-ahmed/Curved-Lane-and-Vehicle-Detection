@@ -11,7 +11,7 @@ from moviepy.editor import *
 file_name = sys.argv[1]
 input_video_path = sys.argv[2]
 output_video_path = sys.argv[3]
-debug = sys.argv[3]
+debug = sys.argv[4]
 
 objp = np.zeros((6*9, 3), np.float32)
 objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
@@ -73,11 +73,7 @@ def showImages(process, num=len(images), show_gray=False):
         plt.show()
 
 
-# showImages(undistort_image)
-
-
 # Edge deection using sobel
-
 
 def abs_sobel(image, direction='x', kernel_size=3, thresh_range=(0, 255)):
 
@@ -121,6 +117,7 @@ def calc_mag_thresh(image, kernel_size=3, thresh_range=(0, 255)):
     # Black and white output image
     return binary_img
 
+
 def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
 
     # Apply threshold
@@ -152,42 +149,43 @@ def combined_thresholds(image, ksize=3):
     combined[((gradx == 1) | (gradx == 1)) & (
         (mag_binary == 1) | (dir_binary == 1))] = 1
     return combined
-#showImages(combined_thresholds, show_gray=True)
+
 
 def Image_Filter(image):
-    
-    # Convert image from RGB to HLS 
+
+    # Convert image from RGB to HLS
     hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-    
+
     # get the HLS channels to HLS
-    h_channel = hls[:,:,0]
-    l_channel = hls[:,:,1]
-    s_channel = hls[:,:,2]
-    
+    h_channel = hls[:, :, 0]
+    l_channel = hls[:, :, 1]
+    s_channel = hls[:, :, 2]
+
     # Choose a Sobel kernel size to detecte channel
     sxbinary = combined_thresholds(image)
-    
+
     # Threshold color channel
     s_thresh_min = 80
     s_thresh_max = 255
     l_thresh_min = 190
-    l_thresh_max = 255 
-    
-    #get the binary representation to this channels
+    l_thresh_max = 255
+
+    # get the binary representation to this channels
     s_binary = np.zeros_like(s_channel)
     l_binary = np.zeros_like(s_channel)
-    
-    #Apple the theresould to this binary 
-    s_binary[((s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)) ] = 1
+
+    # Apple the theresould to this binary
+    s_binary[((s_channel >= s_thresh_min) & (s_channel <= s_thresh_max))] = 1
     l_binary[((l_channel >= l_thresh_min) & (l_channel <= l_thresh_max))] = 1
 
     # Combine the two binary thresholds
     combined_binary = np.zeros_like(sxbinary)
-    combined_binary[((s_binary == 1) & (sxbinary == 1)) | ((sxbinary == 1) & (l_binary == 1))] = 1
-    
+    combined_binary[((s_binary == 1) & (sxbinary == 1)) |
+                    ((sxbinary == 1) & (l_binary == 1))] = 1
+
     return combined_binary
-    
-    
+
+
 # warp and inwarp prespective
 
 def warp(image):
@@ -212,32 +210,33 @@ def inwarp(image):
     return warped
 
 
-#lane detection
+# lane detection
 
 class LaneDetector:
-    
+
     def __init__(self):
         self.detected = True
         # Create empty lists to receive left and right lane pixel indices
-        self.left_lane_inds = []  
+        self.left_lane_inds = []
         self.right_lane_inds = []
-        
+
         self.n_frames = 10
-        
+
         # x values of the last n fits of the line
-        self.recent_xfitted = [] 
-        #average x values of the fitted line over the last n iterations
-        self.bestx = [np.zeros_like(720, np.float32), np.zeros_like(720, np.float32)]
-        
+        self.recent_xfitted = []
+        # average x values of the fitted line over the last n iterations
+        self.bestx = [np.zeros_like(720, np.float32),
+                      np.zeros_like(720, np.float32)]
+
         # coefficient values of the last n fits of the line
         self.recent_coefficients = []
-        
-        #polynomial coefficients averaged over the last n iterations
-        self.best_fit = [0,0,0]
-        
+
+        # polynomial coefficients averaged over the last n iterations
+        self.best_fit = [0, 0, 0]
+
         self.vehicle_offset = 0.0
         self.avg_curverad = 1000
-        
+
     def draw_lane(self, orignal_image, binary_warped, filtered_binary):
 
         # Identify the x and y positions of all nonzero pixels in the image
@@ -309,9 +308,8 @@ class LaneDetector:
             self.right_lane_inds = ((nonzerox > (self.best_fit[1][0]*(nonzeroy**2) + self.best_fit[1][1]*nonzeroy +
                                     self.best_fit[1][2] - margin)) & (nonzerox < (self.best_fit[1][0]*(nonzeroy**2) +
                                                                                   self.best_fit[1][1]*nonzeroy + self.best_fit[1][2] + margin)))
-  
-        
-    # Again, extract left and right line pixel positions
+
+        # Again, extract left and right line pixel positions
         leftx = nonzerox[self.left_lane_inds]
         lefty = nonzeroy[self.left_lane_inds]
         rightx = nonzerox[self.right_lane_inds]
@@ -401,39 +399,44 @@ class LaneDetector:
 
         result = cv2.addWeighted(
             orignal_image, 1, window_img_unwrapped, 0.3, 0)
-        
-        if leftx.shape[0] >= ploty.shape[0] and rightx.shape[0] >= ploty.shape[0] :
+
+        if leftx.shape[0] >= ploty.shape[0] and rightx.shape[0] >= ploty.shape[0]:
             leftx = leftx[::-1]  # Reverse to match top-to-bottom in y
             rightx = rightx[::-1]  # Reverse to match top-to-bottom in y
 
             # Define conversions in x and y from pixels space to meters
-            ym_per_pix = 4.3/binary_warped.shape[0] # meters per pixel in y dimension
-            xm_per_pix = 1/binary_warped.shape[1] # meters per pixel in x dimension
+            # meters per pixel in y dimension
+            ym_per_pix = 4.3/binary_warped.shape[0]
+            # meters per pixel in x dimension
+            xm_per_pix = 1/binary_warped.shape[1]
 
-            self.vehicle_offset = ((binary_warped.shape[1]/2) - (((rightx[0] - leftx[0])/2) + leftx[0]))*xm_per_pix
-            
+            self.vehicle_offset = (
+                (binary_warped.shape[1]/2) - (((rightx[0] - leftx[0])/2) + leftx[0]))*xm_per_pix
 
             leftx = leftx[:len(ploty)]
             rightx = rightx[:len(ploty)]
 
             y_eval = np.max(ploty)
-            
+
             # Fit new polynomials to x,y in world space
             left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
             right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
             # Calculate the new radii of curvature
-            left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-            right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+            left_curverad = (
+                (1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+            right_curverad = (
+                (1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
             # Now our radius of curvature is in meters
             self.avg_curverad = (left_curverad + right_curverad) / 2
-            
-        cv2.putText(result, 'Vehicle is ' + str(-self.vehicle_offset)[0:5] + 'm left of center', (30,140), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2)
-        cv2.putText(result, 'Radius of Curvature = ' + str(int(np.round(self.avg_curverad))) + '(m)', (30,80), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2)
-        
-        
+
+        cv2.putText(result, 'Vehicle is ' + str(-self.vehicle_offset)
+                    [0:5] + 'm left of center', (30, 140), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2)
+        cv2.putText(result, 'Radius of Curvature = ' + str(int(np.round(self.avg_curverad))
+                                                           ) + '(m)', (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2)
+
         return result
 
-                  
+
 # process image function
 lane_detector = LaneDetector()
 draw_lane = lane_detector.draw_lane
@@ -474,5 +477,4 @@ white_output = output_video_path+file_name + name
 clip1 = VideoFileClip(file_name+".mp4")
 white_clip = clip1.fl_image(process_image)
 white_clip.write_videofile(white_output, audio=False)
-            
-   
+
