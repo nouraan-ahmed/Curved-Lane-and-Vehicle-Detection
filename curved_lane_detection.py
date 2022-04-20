@@ -186,3 +186,63 @@ def Image_Filter(image):
     combined_binary[((s_binary == 1) & (sxbinary == 1)) | ((sxbinary == 1) & (l_binary == 1))] = 1
     
     return combined_binary
+    
+    
+#prespectives
+
+#land detect
+
+class LaneDetector:
+
+    def __init__(self):
+    
+    def draw_lane(self, orignal_image, binary_warped, filtered_binary):
+    
+    #Renad
+    #da kda mn b3d l else 
+    # Again, extract left and right line pixel positions
+        leftx = nonzerox[self.left_lane_inds]
+        lefty = nonzeroy[self.left_lane_inds]
+        rightx = nonzerox[self.right_lane_inds]
+        righty = nonzeroy[self.right_lane_inds]
+
+        ploty = np.linspace(
+            0, binary_warped.shape[0]-1, binary_warped.shape[0])
+
+        # Fit a second order polynomial to each
+        if lefty.shape[0] >= 400 and righty.shape[0] >= 400 and leftx.shape[0] >= 400 and rightx.shape[0] >= 400:
+            self.detected = False
+            self.left_fit = np.polyfit(lefty, leftx, 2)
+            self.right_fit = np.polyfit(righty, rightx, 2)
+
+            if len(self.recent_coefficients) >= self.n_frames:
+                self.recent_coefficients.pop(0)
+            self.recent_coefficients.append([self.left_fit, self.right_fit])
+
+            self.best_fit = [0, 0, 0]
+            for coefficient in self.recent_coefficients:
+                self.best_fit[0] = self.best_fit[0] + coefficient[0]
+                self.best_fit[1] = self.best_fit[1] + coefficient[1]
+
+            self.best_fit[0] = self.best_fit[0]/len(self.recent_coefficients)
+            self.best_fit[1] = self.best_fit[1]/len(self.recent_coefficients)
+
+            # Generate x and y values for plotting
+            left_fitx = self.best_fit[0][0]*ploty**2 + \
+                self.best_fit[0][1]*ploty + self.best_fit[0][2]
+            right_fitx = self.best_fit[1][0]*ploty**2 + \
+                self.best_fit[1][1]*ploty + self.best_fit[1][2]
+
+            if len(self.recent_xfitted) >= self.n_frames:
+                self.recent_xfitted.pop(0)
+
+            self.recent_xfitted.append([left_fitx, right_fitx])
+
+            self.bestx = [np.zeros_like(
+                720, np.float32), np.zeros_like(720, np.float32)]
+            for fit in self.recent_xfitted:
+                self.bestx[0] = self.bestx[0] + fit[0]
+                self.bestx[1] = self.bestx[1] + fit[1]
+
+            self.bestx[0] = self.bestx[0]/len(self.recent_xfitted)
+            self.bestx[1] = self.bestx[1]/len(self.recent_xfitted)
