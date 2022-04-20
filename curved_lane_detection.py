@@ -246,3 +246,39 @@ class LaneDetector:
 
             self.bestx[0] = self.bestx[0]/len(self.recent_xfitted)
             self.bestx[1] = self.bestx[1]/len(self.recent_xfitted)
+            
+            
+            
+#process image function
+
+lane_detector = LaneDetector()
+draw_lane = lane_detector.draw_lane
+def process_image(image):
+    undistorted = undistort_image(image)
+    filtered_binary = Image_Filter(undistorted)
+    binary_warped = warp(filtered_binary)
+    binary_inwarped = inwarp(binary_warped)
+    final_image = draw_lane(image, binary_warped, filtered_binary)
+    sobel_image =combined_thresholds(image, ksize = 3)
+    img1= cv2.resize(final_image,(0, 0), None,0.5, 0.5)
+    img2 = cv2.resize(undistorted, (0, 0), None, 0.5, 0.5)
+    img3 = np.dstack((filtered_binary, filtered_binary, filtered_binary)) * 255
+    img3 = cv2.resize(img3, (0, 0), None, 0.5, 0.5)
+    img4 = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
+    img4 = cv2.resize(img4, (0, 0), None, 0.5, 0.5)
+    img5 = np.dstack((sobel_image, sobel_image, sobel_image)) * 255
+    img5 = cv2.resize(img5, (0, 0), None, 0.5, 0.5)
+    img6 = np.dstack((binary_inwarped, binary_inwarped, binary_inwarped)) * 255
+    img6 = cv2.resize(img6, (0, 0), None, 0.5, 0.5)
+
+    f_image1 = cv2.vconcat([img1, img2])
+    f_image2 = cv2.vconcat([img3, img4])
+    f_image3 = cv2.vconcat([img5, img6])
+    f_image = np.concatenate((f_image1, f_image2, f_image3), axis=1)
+    return f_image
+
+
+showImages(process_image,show_gray=True)
+            
+            
+   
