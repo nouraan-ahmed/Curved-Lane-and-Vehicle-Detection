@@ -215,7 +215,29 @@ def inwarp(image):
 #land detection
 
 class LaneDetector:
-
+    
+    def __init__(self):
+        self.detected = True
+        # Create empty lists to receive left and right lane pixel indices
+        self.left_lane_inds = []  
+        self.right_lane_inds = []
+        
+        self.n_frames = 10
+        
+        # x values of the last n fits of the line
+        self.recent_xfitted = [] 
+        #average x values of the fitted line over the last n iterations
+        self.bestx = [np.zeros_like(720, np.float32), np.zeros_like(720, np.float32)]
+        
+        # coefficient values of the last n fits of the line
+        self.recent_coefficients = []
+        
+        #polynomial coefficients averaged over the last n iterations
+        self.best_fit = [0,0,0]
+        
+        self.vehicle_offset = 0.0
+        self.avg_curverad = 1000
+        
     def draw_lane(self, orignal_image, binary_warped, filtered_binary):
 
         # Identify the x and y positions of all nonzero pixels in the image
