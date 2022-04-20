@@ -51,3 +51,13 @@ After Undestortion
 ![alt text][image2]
 
 ### Pipeline (single images)
+
+#### 1. Provide an example of a distortion-corrected image.
+
+To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+
+Before 
+![alt text][image3]
+
+After
+![alt text][image4]
