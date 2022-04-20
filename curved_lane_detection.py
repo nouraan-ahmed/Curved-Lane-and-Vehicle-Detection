@@ -475,6 +475,36 @@ plt.figure(figsize=(20, 20))
 plt.imshow(final_image)
 
 # output video
+lane_detector = LaneDetector()
+draw_lane = lane_detector.draw_lane
+white_output = output_video_path+file_name + '_output.mp4'
+clip1 = VideoFileClip(file_name+".mp4")
 
+if debug:
+    clip01 = clip1.fl_image(undistort_image)
+    clip02 = clip1.fl_image(combined_thresholds)
+    clip03 = clip1.fl_image(Image_Filter)
+    clip04 = clip1.fl_image(warp)
+    clip05 = clip1.fl_image(process_image)
+
+    out1 = output_video_path+"undistort.mp4"
+    out2 = output_video_path+"combined_thresholds.mp4"
+    out3 = output_video_path+"filter.mp4"
+    out4 = output_video_path+"warp.mp4"
+    out5 = output_video_path+"process.mp4"
+    white_output = output_video_path+file_name + '_output.mp4'
+
+    clip01.write_videofile(out1, audio=False)
+    clip02.write_videofile(out2, audio=False)
+    clip03.write_videofile(out3, audio=False)
+    clip04.write_videofile(out4, audio=False)
+    clip05.write_videofile(out5, audio=False)
+
+    result_clip = concatenate_videoclips(
+        [clip01, clip02, clip03, clip04, clip05])
+    result_clip.write_videofile(white_output, audio=False)
+else:
+    white_clip = clip1.fl_image(process_image)
+    white_clip.write_videofile(white_output, audio=False)
             
    
