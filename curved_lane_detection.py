@@ -468,6 +468,13 @@ def process_image(image):
 showImages(process_image,show_gray=True)
 
 
-            
+# Show Image
+test_image = mpimg.imread('test_images/test1.jpg')
+final_image = process_image(test_image)
+plt.figure(figsize=(20, 20))
+plt.imshow(final_image)
+
+# output video
+
             
    
