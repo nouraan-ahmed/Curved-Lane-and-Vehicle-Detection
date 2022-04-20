@@ -121,3 +121,35 @@ def calc_mag_thresh(image, kernel_size=3, thresh_range=(0, 255)):
     # Black and white output image
     return binary_img
 
+def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
+
+    # Apply threshold
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # Calculate the x and y gradients
+    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+    # Take the absolute value of the gradient direction,
+    # apply a threshold, and create a binary image result
+    absgraddir = np.arctan2(np.absolute(sobel_y), np.absolute(sobel_x))
+    binary_image_output = np.zeros_like(absgraddir)
+    binary_image_output[(absgraddir >= thresh[0]) &
+                        (absgraddir <= thresh[1])] = 1
+
+    # Return the binary image
+    return binary_image_output
+
+
+def combined_thresholds(image, ksize=3):
+    # Choose a Sobel kernel size
+    # Apply each of the thresholding functions
+    gradx = abs_sobel(image, direction='x',
+                      kernel_size=ksize, thresh_range=(5, 100))
+    mag_binary = calc_mag_thresh(
+        image, kernel_size=ksize, thresh_range=(3, 255))
+    dir_binary = dir_threshold(
+        image, sobel_kernel=ksize, thresh=(45*np.pi/180, 75*np.pi/180))
+    combined = np.zeros_like(dir_binary, np.uint8)
+    combined[((gradx == 1) | (gradx == 1)) & (
+        (mag_binary == 1) | (dir_binary == 1))] = 1
+    return combined
+#showImages(combined_thresholds, show_gray=True)
