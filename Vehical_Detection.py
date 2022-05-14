@@ -377,3 +377,50 @@ def fast_frame_search(img,x_left,x_rght,y_top,y_bot,scale,model,scaler):
     
     wndw_sz = GLOBAL_CONFIG['SAMPLE_SZ'][0]
     blocks_per_window = (wndw_sz // pix_per_cell) - (cells_per_block-1)
+          
+    cells_per_step = int(GLOBAL_CONFIG['CELLS_PER_STEP'])
+    
+    nb_steps_x = (nb_blocks_x - blocks_per_window ) // cells_per_step + 1
+    nb_steps_y = (nb_blocks_y - blocks_per_window ) // cells_per_step + 1
+    
+    if nb_steps_x <= 0  or nb_steps_y <= 0:
+        print('Warning: Using scale {} will generate no sliding windows'.format(scale))
+    
+    for step_y in range(nb_steps_y):
+        for step_x in range(nb_steps_x):
+            
+            cell_x = step_x * cells_per_step
+            cell_y = step_y * cells_per_step
+            
+            hog_features = np.empty([0])
+            
+            for channel_id in channel_ids:
+                hog_chann = hog_roi[channel_id]
+                hog_vector = hog_chann[ cell_y:cell_y+blocks_per_window,cell_x:cell_x+blocks_per_window].flatten()
+                hog_features = np.hstack((hog_features,hog_vector))
+                
+                
+            xleft_px = cell_x * pix_per_cell
+            ytop_px  = cell_y * pix_per_cell
+
+            
+            # Extract sub image
+            sub_img = img_roi[ytop_px:ytop_px+wndw_sz, xleft_px:xleft_px+wndw_sz]
+            
+            spatial_features = extract_spatial_bin_features(sub_img,GLOBAL_CONFIG['SPATIAL_BIN_SZ'])
+            hist_features    = extract_color_hist_features(sub_img,
+                                                           GLOBAL_CONFIG['COLOR_BINS'],
+                                                           GLOBAL_CONFIG['COLOR_VAL_RANGE'])
+            
+            feature_vector = np.hstack((spatial_features,hist_features,hog_features))
+            
+            scaled_features = scaler.transform(feature_vector.reshape([1,-1]))
+            
+            if is_car(model,scaled_features):
+                
+                bbox_x_left = np.int(xleft_px*scale)
+                bbox_y_top  = np.int(ytop_px*scale)
+                
+                bbox_sz = np.int(wndw_sz*scale)
+                
+                yield [(bbox_x_left+x_left, bbox_y_top+y_top),(bbox_x_left+x_left+bbox_sz, bbox_y_top+y_top+bbox_sz)]      
