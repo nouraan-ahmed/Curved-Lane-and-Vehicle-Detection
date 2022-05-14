@@ -239,4 +239,35 @@ def save_model(model,filename):
 def load_model(filename):
     with open(filename,'rb') as f:
         model = pickle.load(f)
-        return model    
+        return model   
+
+## build window list 
+def build_window_list(x_range:tuple, y_range:tuple,
+                      wndw_sz:tuple, stride:tuple):
+    
+    wndw_width, wndw_height = wndw_sz[0], wndw_sz[1] 
+    
+    x_start = x_range[0]
+    x_stop  = x_range[1] - (wndw_width-1)
+    
+    y_start = y_range[0] 
+    y_stop  = y_range[1] - (wndw_height-1)
+    
+    x_stride, y_stride = stride[0], stride[1]
+    
+    
+    # Inclusive range.
+    def irange(start,stop,stride):
+        return range(start,stop+1,stride)
+    
+    x_start_pos = irange(x_start,x_stop,x_stride)
+    y_start_pos = irange(y_start,y_stop,y_stride)
+    
+    
+    for y_top in y_start_pos:
+        y_bottom = y_top + wndw_height -1
+        
+        for x_left in x_start_pos:
+            x_right = x_left + wndw_width - 1
+            
+            yield [(x_left,y_top),(x_right,y_bottom)]
