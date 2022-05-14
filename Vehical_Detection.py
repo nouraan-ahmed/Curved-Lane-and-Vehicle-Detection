@@ -15,6 +15,7 @@ import numpy as np
 import os
 import pickle 
 
+# global config for the project
 GLOBAL_CONFIG = {'SAMPLE_SZ':(64,64) ,
           'COLORSPACE':'YCrCb',
           'SPATIAL_BIN_SZ':(16,16),
@@ -103,7 +104,7 @@ def cvtColor(img,colorspace:str):
 
     return img
 
-
+# get features
 def get_features(img,hog_channel,colorspace):
     
     if colorspace != 'RGB':
@@ -271,3 +272,39 @@ def build_window_list(x_range:tuple, y_range:tuple,
             x_right = x_left + wndw_width - 1
             
             yield [(x_left,y_top),(x_right,y_bottom)]
+
+                    
+                    
+ # draw box                   
+ def draw_bbox(img,bboxes,color=[0,0,255],thick=5):
+    imgcpy = np.copy(img)
+    
+    for bbox in bboxes:
+        cv2.rectangle(imgcpy,bbox[0],bbox[1],color,thick)
+    
+    return imgcpy
+
+# get sub images
+def get_sub_images(img,wndw_sz:tuple,stride:tuple,resize=None):
+    x_range = (0,img.shape[1]-1)
+    y_range = (0,img.shape[0]-1)
+    
+    wndw_list = build_window_list(x_range,y_range,wndw_sz,stride)
+    
+    for wndw in wndw_list:
+        xl,xr = wndw[0][0], wndw[1][0] + 1
+        yl,yr = wndw[0][1], wndw[1][1] + 1
+        
+        if resize != None:
+            sub_image = cv2.resize(img[yl:yr, xl:xr],resize)
+        else:
+            sub_image = img[yl:yr, xl:xr]
+        
+        yield (sub_image,wndw)
+        
+# is car       
+def is_car(model,features):
+     prediction_probs = model.predict_proba(features).flatten()
+     return prediction_probs[1] > GLOBAL_CONFIG['PREDICTION_THRESH']
+
+
