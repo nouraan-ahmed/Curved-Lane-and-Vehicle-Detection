@@ -32,10 +32,21 @@ GLOBAL_CONFIG = {'SAMPLE_SZ':(64,64) ,
           'PREDICTION_THRESH':0.7
         }
 
+#load image
+def imgread(path):
+    return cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB)
 
-//
+def load_image_data(paths):
+    data = []
+    for path in paths:
+        img_data = imgread(path)
+        data.append(img_data)
+    return np.array(data,dtype=np.uint8)
 
-//
+
+def extract_spatial_bin_features(img,size):
+          
+    return cv2.resize(img,size).flatten()
 
 # extract color histogram features
 def extract_color_hist_features(img,nbins,range_vals):
