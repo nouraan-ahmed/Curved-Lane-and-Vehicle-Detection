@@ -331,3 +331,49 @@ def multiscale_window_search(img,wndw_sz_list,strides_list,model,scaler):
             yield window
 
 
+#fast_frame_search
+def fast_frame_search(img,x_left,x_rght,y_top,y_bot,scale,model,scaler):
+    ''' 
+    Perfrom fast search for vehicles across a single video
+    frame.
+    '''
+      
+    # Convert colorspace if needed.
+    if GLOBAL_CONFIG['COLORSPACE'] != 'RGB':
+        img = cvtColor(img,GLOBAL_CONFIG['COLORSPACE'])
+    
+    # Extract region-of-interest(ROI).    
+    img_roi = img[y_top:y_bot,x_left:x_rght,:]
+    
+    # Scale image if needed.
+    if scale != 1:
+        target_width = np.int(img_roi.shape[1]/scale)
+        target_height = np.int(img_roi.shape[0]/scale)
+        img_roi = cv2.resize(img_roi,(target_width,target_height))
+        
+    # Find HOG feature(s) for the entire ROI.
+    hog_roi = []
+    
+    channel_ids = [0,1,2] if GLOBAL_CONFIG['HOG_CHANNEL'] == 'ALL' \
+    else [GLOBAL_CONFIG['HOG_CHANNEL']]
+    
+    for channel_id in channel_ids:
+        hog_chann = extract_hog_features(img_roi[:,:,channel_id],
+                     nb_orient=GLOBAL_CONFIG['HOG_ORIENTS'],
+                     nb_pix_per_cell=GLOBAL_CONFIG['HOG_PIX_PER_CELL'],
+                     nb_cell_per_block = GLOBAL_CONFIG['HOG_CELLS_PER_BLOCK'],
+                     ret_vector=False)
+        hog_roi.append(hog_chann)            
+
+ # Calculate sliding window parameters.
+    pix_per_cell = GLOBAL_CONFIG['HOG_PIX_PER_CELL']
+    cells_per_block = GLOBAL_CONFIG['HOG_CELLS_PER_BLOCK']
+    
+    nb_cells_x = (img_roi.shape[1] // pix_per_cell)
+    nb_blocks_x = nb_cells_x - (cells_per_block-1)
+    
+    nb_cells_y = (img_roi.shape[0] // pix_per_cell)
+    nb_blocks_y = nb_cells_y - (cells_per_block-1)
+    
+    wndw_sz = GLOBAL_CONFIG['SAMPLE_SZ'][0]
+    blocks_per_window = (wndw_sz // pix_per_cell) - (cells_per_block-1)
