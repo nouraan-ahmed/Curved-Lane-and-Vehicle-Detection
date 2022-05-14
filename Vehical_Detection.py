@@ -37,6 +37,16 @@ GLOBAL_CONFIG = {'SAMPLE_SZ':(64,64) ,
 
 //
 
+# extract color histogram features
+def extract_color_hist_features(img,nbins,range_vals):
+    chan0_hist = np.histogram(img[:,:,0],bins=nbins,range=range_vals)
+    chan1_hist = np.histogram(img[:,:,1],bins=nbins,range=range_vals)
+    chan2_hist = np.histogram(img[:,:,2],bins=nbins,range=range_vals)
+    
+    color_hist_features = np.concatenate((chan0_hist[0],
+                                         chan1_hist[0],
+                                         chan2_hist[0]))
+    return color_hist_features
 
 def extract_hog_features(img_channel,nb_orient, 
                          nb_pix_per_cell,
@@ -161,3 +171,31 @@ def build_datasets(car_paths,notcar_paths):
     with open('scaler.p','wb') as f:
         pickle.dump(Scaler_X,f)
     
+# get dataset
+def get_datasets(force=False):
+    
+    if (force == True)\
+    or not os.path.isfile('train.p')\
+    or not os.path.isfile('test.p'):
+            
+        # Load all image data.
+        vehicle_img_path = []
+        vehicle_img_path.extend(glob('vehicles/GTI_Far/*.png'))
+        vehicle_img_path.extend(glob('vehicles/GTI_Left/*.png'))
+        vehicle_img_path.extend(glob('vehicles/GTI_MiddleClose/*.png'))
+        vehicle_img_path.extend(glob('vehicles/GTI_Right/*.png'))
+        vehicle_img_path.extend(glob('vehicles/KITTI_extracted/*.png'))
+          
+        non_vehicle_img_path = []
+        non_vehicle_img_path.extend(glob('non-vehicles/Extras/*.png'))
+        non_vehicle_img_path.extend(glob('non-vehicles/GTI/*.png'))
+        
+        build_datasets(vehicle_img_path, non_vehicle_img_path)
+        
+    with open('train.p','rb') as f:
+        train_data = pickle.load(f)
+        
+    with open('test.p','rb') as f:
+        test_data = pickle.load(f)
+        
+    return (train_data,test_data)
