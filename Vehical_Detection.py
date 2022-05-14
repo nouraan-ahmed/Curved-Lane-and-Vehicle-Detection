@@ -81,3 +81,41 @@ def cvtColor(img,colorspace:str):
         raise Exception("% colorspace is not a valid colorspace"%(colorspace))
 
     return img
+
+
+def get_features(img,hog_channel,colorspace):
+    
+    if colorspace != 'RGB':
+        img = cvtColor(img,colorspace)
+        
+            
+    spatial_bin_features = \
+    extract_spatial_bin_features(img,size =  GLOBAL_CONFIG['SPATIAL_BIN_SZ'])
+    
+    color_hist_features  = \
+    extract_color_hist_features(img,
+                                nbins=GLOBAL_CONFIG['COLOR_BINS'],
+                                range_vals=GLOBAL_CONFIG['COLOR_VAL_RANGE'])
+    
+    if hog_channel == 'ALL':
+        hog_features = [ ]
+        
+        for channel in range(3):
+            hog_features.append(
+                    extract_hog_features(
+                            img[:,:,channel],
+                            nb_orient=GLOBAL_CONFIG['HOG_ORIENTS'],
+                            nb_pix_per_cell=GLOBAL_CONFIG['HOG_PIX_PER_CELL'],
+                            nb_cell_per_block = GLOBAL_CONFIG['HOG_CELLS_PER_BLOCK']))
+            
+        hog_features = np.ravel(hog_features)
+    
+    else:
+        hog_features = extract_hog_features(img[:,:,hog_channel],
+                            nb_orient=GLOBAL_CONFIG['HOG_ORIENTS'],
+                            nb_pix_per_cell=GLOBAL_CONFIG['HOG_PIX_PER_CELL'],
+                            nb_cell_per_block = GLOBAL_CONFIG['HOG_CELLS_PER_BLOCK'])
+    
+    return np.concatenate((spatial_bin_features,
+                          color_hist_features,
+                          hog_features))
