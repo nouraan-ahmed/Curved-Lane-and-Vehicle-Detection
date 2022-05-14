@@ -210,3 +210,33 @@ def get_datasets(force=False):
         test_data = pickle.load(f)
         
     return (train_data,test_data)
+
+#load scaler
+def load_scaler(filename):
+    with open(filename,'rb') as f:
+        scaler = pickle.load(f)
+        return scaler
+
+#train
+def train(X,y):
+    hyperparams = {'C':[0.1,1,10],
+                   'kernel':['linear']}
+    svc = SVC(probability=True)
+    clf = GridSearchCV(svc,hyperparams,verbose=2)
+    clf.fit(X,y)
+    return clf
+
+#test
+def test(model,X,y):
+    return round(model.score(X,y), 4)
+
+#save model
+def save_model(model,filename):
+    with open(filename,'wb') as f:
+        pickle.dump(model, f)
+        
+#load model
+def load_model(filename):
+    with open(filename,'rb') as f:
+        model = pickle.load(f)
+        return model    
