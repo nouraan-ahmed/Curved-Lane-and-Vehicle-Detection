@@ -306,5 +306,28 @@ def get_sub_images(img,wndw_sz:tuple,stride:tuple,resize=None):
 def is_car(model,features):
      prediction_probs = model.predict_proba(features).flatten()
      return prediction_probs[1] > GLOBAL_CONFIG['PREDICTION_THRESH']
+     
+def window_search(img,wndw_sz:tuple,stride:tuple,model,scaler):
+
+    sub_images = get_sub_images(img,wndw_sz,stride,resize=GLOBAL_CONFIG['SAMPLE_SZ'])
+    
+    for sub_image,wndw in sub_images:
+        features = get_features(sub_image,hog_channel= GLOBAL_CONFIG['HOG_CHANNEL'],
+                              colorspace=GLOBAL_CONFIG['COLORSPACE'])
+        scaled_features = scaler.transform(features.reshape(1,-1))
+        
+        car = is_car(model,scaled_features)
+        
+        if car == 1:
+            yield wndw
+            
+            
+def multiscale_window_search(img,wndw_sz_list,strides_list,model,scaler):
+       
+    for i in range(len(wndw_sz_list)):
+        windows = window_search(img,wndw_sz_list[i],strides_list[i],
+                                model,scaler)
+        for window in windows:
+            yield window
 
 
