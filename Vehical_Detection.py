@@ -119,3 +119,45 @@ def get_features(img,hog_channel,colorspace):
     return np.concatenate((spatial_bin_features,
                           color_hist_features,
                           hog_features))
+
+## Build dataset
+
+def build_datasets(car_paths,notcar_paths):
+    paths = car_paths+notcar_paths
+    
+    X = []
+    for path in tqdm(paths):
+        img = imgread(path)
+        X.append(get_features(img,
+                              hog_channel= GLOBAL_CONFIG['HOG_CHANNEL'],
+                              colorspace=GLOBAL_CONFIG['COLORSPACE']))
+        
+    X = np.reshape(X,[len(paths),-1])
+    
+    
+    y = np.concatenate((np.ones(len(car_paths)),
+                       np.zeros(len(notcar_paths))))
+    
+    
+    Scaler_X = StandardScaler().fit(X)    
+    
+    X_scaled = Scaler_X.transform(X)
+    
+    X_scaled, y = shuffle(X_scaled,y)
+    
+    X_train, X_test, y_train, y_test = \
+        train_test_split(X_scaled,y,train_size=0.7)
+        
+    del([X_scaled,y])
+    
+    with open('train.p','wb') as f:
+        train_set = {'data':X_train, 'labels':y_train}
+        pickle.dump(train_set,f)
+        
+    with open('test.p','wb') as f:
+        test_set = {'data':X_test, 'labels':y_test}
+        pickle.dump(test_set,f)
+    
+    with open('scaler.p','wb') as f:
+        pickle.dump(Scaler_X,f)
+    
