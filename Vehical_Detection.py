@@ -424,3 +424,30 @@ def fast_frame_search(img,x_left,x_rght,y_top,y_bot,scale,model,scaler):
                 bbox_sz = np.int(wndw_sz*scale)
                 
                 yield [(bbox_x_left+x_left, bbox_y_top+y_top),(bbox_x_left+x_left+bbox_sz, bbox_y_top+y_top+bbox_sz)]      
+          
+          
+# build_heatmap     
+def build_heatmap(hmap,queue):
+    for bboxes in queue:
+        for [(xl,yt),(xr,yb)] in bboxes:
+            hmap[yt:yb,xl:xr] += 1
+    np.clip(hmap,0,255)
+    
+# threshold_heat    
+def threshold_heat(hmap,thresh):
+    return (hmap >= thresh).astype(np.uint8)
+
+# search_vehicles
+def search_vehicles(img,model,scaler):
+    bboxes = []
+    
+    rois = GLOBAL_CONFIG['ROIS']
+    scales = GLOBAL_CONFIG['SCALES']
+    for i in range(len(scales)):
+        roi_x = rois[i][0]
+        roi_y = rois[i][1]
+        bbox_list = list(fast_frame_search(img,roi_x[0],roi_x[1],roi_y[0],roi_y[1],scales[i],model,scaler))
+        bboxes.extend(bbox_list)
+        
+    return bboxes
+
