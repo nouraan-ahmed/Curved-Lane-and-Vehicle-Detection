@@ -450,4 +450,88 @@ def search_vehicles(img,model,scaler):
         bboxes.extend(bbox_list)
         
     return bboxes
+def labels_to_bboxes(labels):
+    nb_labels = labels[1]
+    label_map = labels[0]
+    
+    for label_id in range(1,nb_labels+1):
+        nonzero = (label_map == label_id).nonzero()
+        
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        
+        xl = np.min(nonzerox)
+        xr = np.max(nonzerox)
+        
+        yt = np.min(nonzeroy)
+        yb = np.max(nonzeroy)
+        
+        yield [(xl,yt),(xr,yb)]
+
+def video_pipeline():
+    if not os.path.isfile('model.p'):
+        train_data,test_data = get_datasets()
+        
+        X_train, y_train = train_data['data'],train_data['labels']
+        X_test,y_test = test_data['data'],test_data['labels']
+        
+        model = train(X_train, y_train)
+        del([train_data])
+        
+        print('Test Accuracy of SVC = ',test(model,X_test,y_test))
+        del([test_data])
+    
+        save_model(model, 'model.p')
+        
+    else:    
+        model = load_model('model.p')
+        
+    X_scaler = load_scaler('scaler.p')
+    
+    
+    img_width = 1280
+    img_height = 720
+
+    bbox_queue = deque()  
+    
+    def process_frame(img):
+        
+        bboxes_incoming = search_vehicles(img,model,X_scaler)
+        
+        
+        if len(bbox_queue) > GLOBAL_CONFIG['FRAME_HIST_COUNT']:
+            bbox_queue.popleft()
+         
+        bbox_queue.append(bboxes_incoming)
+
+        heatmap = np.zeros([img_height,img_width])
+        build_heatmap(heatmap,bbox_queue)
+        high_heat = threshold_heat(heatmap,GLOBAL_CONFIG['HEAT_THRESH'])
+        
+        labels = label(high_heat)
+        
+        bboxes_to_draw = list(labels_to_bboxes(labels))
+        if len(bboxes_to_draw) == 0:
+            return draw_bbox(img,process_frame.bboxes_prev,color=[255,0,0])
+        else:
+            process_frame.bboxes_prev = [bbox for bbox in bboxes_to_draw ]
+        
+        return draw_bbox(img,bboxes_to_draw)
+    
+    process_frame.bboxes_prev = []
+    
+    
+    # Process video.
+    in_clip = VideoFileClip('project_video.mp4',audio=False)
+
+    out_filename = 'processed-poject_video.mp4'
+    
+    print("Searching vehicles at scales {}:".format(GLOBAL_CONFIG['SCALES']))
+    out_clip = in_clip.fl_image(process_frame)
+    out_clip.write_videofile(out_filename,audio=False)
+         
+            
+
+if __name__ == '__main__':
+    video_pipeline()
 
