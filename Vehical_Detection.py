@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pickle 
+import sys
+
+input_path = sys.argv[1]
+output_path= sys.argv[2]
 
 # global config for the project
 GLOBAL_CONFIG = {'SAMPLE_SZ':(64,64) ,
@@ -276,7 +280,7 @@ def build_window_list(x_range:tuple, y_range:tuple,
                     
                     
  # draw box                   
- def draw_bbox(img,bboxes,color=[0,0,255],thick=5):
+def draw_bbox(img,bboxes,color=[0,0,255],thick=5):
     imgcpy = np.copy(img)
     
     for bbox in bboxes:
@@ -522,9 +526,9 @@ def video_pipeline():
     
     
     # Process video.
-    in_clip = VideoFileClip('project_video.mp4',audio=False)
+    in_clip = VideoFileClip(input_path,audio=False)
 
-    out_filename = 'processed-poject_video.mp4'
+    out_filename = output_path 
     
     print("Searching vehicles at scales {}:".format(GLOBAL_CONFIG['SCALES']))
     out_clip = in_clip.fl_image(process_frame)
